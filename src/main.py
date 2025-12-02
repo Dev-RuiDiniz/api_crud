@@ -1,34 +1,51 @@
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware # Usaremos para o CORS, essencial em APIs
+from starlette.middleware.cors import CORSMiddleware
+from .config.db import connect_to_mongo, close_mongo_connection, get_database
 
 # 1. Instância do FastAPI
 app = FastAPI(
     title="API CRUD de Pedidos",
-    description="API de exemplo para gerenciamento de pedidos, construída com FastAPI.",
+    description="API de exemplo para gerenciamento de pedidos, construída com FastAPI e MongoDB.",
     version="1.0.0",
 )
 
-# 2. Configuração do Middleware CORS (Cross-Origin Resource Sharing)
-# Essencial para permitir que um front-end em outro domínio acesse esta API.
+# 2. Configuração do Middleware CORS
+# Permite que aplicações front-end em diferentes domínios acessem a API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite qualquer origem. Em produção, liste domínios específicos.
+    allow_origins=["*"],  # Permite todas as origens (mudar em produção)
     allow_credentials=True,
-    allow_methods=["*"],  # Permite todos os métodos (GET, POST, PUT, DELETE, etc.)
+    allow_methods=["*"],  # Permite todos os métodos HTTP
     allow_headers=["*"],  # Permite todos os cabeçalhos
 )
 
-# 3. Importar e Incluir Roteadores (Futuro)
-# No momento, o roteador de pedidos está vazio, mas esta linha o incluirá:
-# from .routers import order_router # (Exemplo: se você criar o order_router)
-# app.include_router(order_router, prefix="/api/v1")
+# 3. Event Handlers para a Conexão com o MongoDB
+
+@app.on_event("startup")
+async def startup_db_client():
+    """Função executada ANTES da API começar a receber requisições."""
+    await connect_to_mongo()
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    """Função executada DEPOIS da API parar de receber requisições."""
+    await close_mongo_connection()
 
 # 4. Rota de Teste (Health Check)
 @app.get("/", tags=["Health Check"])
 def health_check():
-    """Endpoint simples para verificar se a API está online."""
-    return {"message": "API CRUD está online!"}
+    """Endpoint simples para verificar se a API está online e o status do DB."""
+    db = get_database()
+    db_status = "Conectado" if db else "Desconectado"
+    
+    return {
+        "message": "API CRUD está online!",
+        "database_status": db_status
+    }
 
-# ---
-# Para rodar a aplicação, use o Uvicorn no terminal (com o ambiente virtual ativo):
-# uvicorn src.main:app --reload --port 8000
+# 5. Roteadores (Futura Inclusão)
+# Aqui, futuramente, você incluirá seus roteadores:
+# from .routers.user import router as user_router
+# app.include_router(user_router, prefix="/api/v1/users", tags=["Usuários"])
+
+# Para rodar a aplicação: uvicorn src.main:app --reload
