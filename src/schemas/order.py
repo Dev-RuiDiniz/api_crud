@@ -83,3 +83,15 @@ class OrderDB(OrderInput):
         populate_by_name=True, # Importante para usar aliases
         from_attributes=True   # Permite conversão de objetos ORM/DB
     )
+    
+# --- 4. Schema de Atualização Parcial (PATCH) ---
+class OrderUpdate(BaseModel):
+    """
+    Define a estrutura para atualização parcial de um Pedido.
+    Todos os campos são Optional.
+    """
+    customer_id: Optional[int] = Field(None, description="ID do cliente que realizou o pedido.")
+    items: Optional[List[ItemInput]] = Field(None, min_length=1, description="Lista de itens do pedido.")
+    shipping_address: Optional[str] = Field(None, description="Endereço de entrega (opcional).")
+    status: Optional[str] = Field(None, description="Status atual do pedido.")
+    # Nota: Não incluímos 'id' ou 'created_at' aqui, pois não devem ser alterados.
