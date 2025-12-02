@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from src.schemas.order import OrderDB, OrderInput
 from src.config.db import get_database
 from pymongo.results import InsertOneResult
 from bson import ObjectId
+from pymongo import ASCENDING, DESCENDING # Importação para ordenação (sort)
 
 # Nome da coleção no MongoDB
 COLLECTION_NAME = "orders"
@@ -88,3 +89,49 @@ async def get_order_by_id(order_id: str) -> Optional[OrderDB]:
         return None
     
     return None
+
+# --- NOVA FUNÇÃO: Listar Todos os Pedidos com Paginação ---
+async def list_orders(skip: int = 0, limit: int = 10) -> List[OrderDB]:
+    """
+    Busca uma lista de pedidos no MongoDB com suporte a paginação.
+
+    :param skip: Número de documentos a serem ignorados (offset).
+    :param limit: Número máximo de documentos a serem retornados.
+    :return: Uma lista de objetos OrderDB.
+    """
+    db = get_database()
+
+    if not db:
+        return []
+
+    try:
+        collection = db[COLLECTION_NAME]
+        
+        # 1. Constrói a query usando cursor assíncrono do Motor
+        cursor = collection.find({}) # Busca todos os documentos
+        
+        # 2. Aplica Ordenação (sort)
+        # Ordenamos por data de criação (created_at) de forma decrescente (mais recente primeiro)
+        cursor.sort("created_at", DESCENDING) 
+        
+        # 3. Aplica Paginação (skip e limit)
+        # O cursor do Motor suporta os métodos .skip() e .limit()
+        cursor = cursor.skip(skip).limit(limit)
+        
+        # 4. Converte o cursor em uma lista de documentos (execução assíncrona)
+        orders_list = await cursor.to_list(length=limit)
+        
+        # 5. Mapeamento de Retorno: Converte cada documento MongoDB para Pydantic
+        mapped_orders: List[OrderDB] = []
+        for order_doc in orders_list:
+            # Mapeamento: MongoDB '_id' (ObjectId) para Pydantic 'id' (str)
+            order_doc["id"] = str(order_doc.pop("_id"))
+            
+            # Instancia e valida o modelo Pydantic
+            mapped_orders.append(OrderDB(**order_doc))
+            
+        return mapped_orders
+            
+    except Exception as e:
+        print(f"❌ ERRO ao listar pedidos: {e}")
+        return []
