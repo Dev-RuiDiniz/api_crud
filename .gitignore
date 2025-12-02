@@ -1,0 +1,31 @@
+# Arquivos de Sistema
+.DS_Store
+
+# Ambientes Virtuais
+.venv/
+venv/
+env/
+/bin/
+/include/
+/lib/
+/lib64/
+
+# Python
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# Build artifacts
+dist/
+build/
+*.egg-info
+
+# Logs e Dados
+*.log
+*.sqlite3 # Para bancos de dados SQLite locais
+data/
+
+# Arquivos de Configuração Sensíveis (NÃO DEVE SER VERSIONADO!)
+.env
+*.json.secret
