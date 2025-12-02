@@ -1,22 +1,22 @@
 api_crud/
-├── .venv/            # Ambiente virtual (ignorado pelo git)
-├── .gitignore        # Arquivos e pastas a serem ignorados
-├── requirements.txt  # Dependências do projeto (frameworks, bibliotecas)
-├── README.md         # Documentação inicial
-├── main.py           # Ponto de entrada da aplicação (onde a API é iniciada)
+├── .venv/
+├── requirements.txt
+├── .gitignore
 ├── src/
-│   ├── __init__.py   # Marca 'src' como um pacote Python
-│   ├── config.py     # Configurações do ambiente (DB_URL, SECRET_KEY, etc.)
-│   ├── database.py   # Lógica de conexão e setup do banco de dados (ex: SQLAlchemy engine)
-│   ├── models/       # Definições dos modelos de dados (SQLAlchemy Models, Pydantic Schemas)
+│   ├── __init__.py     # (1) Pacote principal
+│   ├── main.py         # (2) Ponto de entrada e inicialização do FastAPI
+│   ├── config/         # (3) Configurações da aplicação e variáveis de ambiente
 │   │   ├── __init__.py
-│   │   └── user_model.py
-│   ├── services/     # Lógica de negócio (CRUD operations)
+│   │   └── settings.py
+│   ├── schemas/        # (4) Pydantic Models (Definição dos dados de entrada/saída)
 │   │   ├── __init__.py
-│   │   └── user_service.py
-│   └── routes/       # Definição dos endpoints (rotas da API)
+│   │   └── user.py     # Exemplo de schema para Usuário
+│   ├── crud/           # (5) Operações de Banco de Dados (Interação direta com a ORM/DB)
+│   │   ├── __init__.py
+│   │   └── user.py     # Funções CRUD para Usuário
+│   └── routers/        # (6) Definição das Rotas/Endpoints (Lógica do FastAPI)
 │       ├── __init__.py
-│       └── user_routes.py
+│       └── user.py     # Endpoints de Usuário (GET, POST, PUT, DELETE)
 └── tests/            # Testes unitários e de integração
     ├── __init__.py
     └── test_user_routes.py
