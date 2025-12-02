@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+# Funções para ciclo de vida do DB
 from .config.db import connect_to_mongo, close_mongo_connection, get_database
+
+# --- Roteadores ---
+# Importa a instância do APIRouter que criamos em src/routers/orders.py
+from .routers.orders import router as orders_router
 
 # 1. Instância do FastAPI
 app = FastAPI(
@@ -10,28 +15,31 @@ app = FastAPI(
 )
 
 # 2. Configuração do Middleware CORS
-# Permite que aplicações front-end em diferentes domínios acessem a API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite todas as origens (mudar em produção)
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Permite todos os métodos HTTP
-    allow_headers=["*"],  # Permite todos os cabeçalhos
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 3. Event Handlers para a Conexão com o MongoDB
 
 @app.on_event("startup")
 async def startup_db_client():
-    """Função executada ANTES da API começar a receber requisições."""
+    """Conecta ao MongoDB quando a API inicia."""
     await connect_to_mongo()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    """Função executada DEPOIS da API parar de receber requisições."""
+    """Fecha a conexão do MongoDB quando a API é encerrada."""
     await close_mongo_connection()
 
-# 4. Rota de Teste (Health Check)
+# 4. Inclusão dos Roteadores
+# Inclui as rotas definidas em src/routers/orders.py
+app.include_router(orders_router)
+
+# 5. Rota de Teste (Health Check)
 @app.get("/", tags=["Health Check"])
 def health_check():
     """Endpoint simples para verificar se a API está online e o status do DB."""
@@ -42,10 +50,5 @@ def health_check():
         "message": "API CRUD está online!",
         "database_status": db_status
     }
-
-# 5. Roteadores (Futura Inclusão)
-# Aqui, futuramente, você incluirá seus roteadores:
-# from .routers.user import router as user_router
-# app.include_router(user_router, prefix="/api/v1/users", tags=["Usuários"])
 
 # Para rodar a aplicação: uvicorn src.main:app --reload
