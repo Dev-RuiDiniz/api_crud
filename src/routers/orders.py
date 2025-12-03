@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends # Importa o Depends
 from typing import List
 from src.crud.orders import (
     get_order_by_id, 
     create_order, 
     list_orders, 
     update_order, 
-    delete_order # Importa a nova função CRUD
+    delete_order
 )
 from src.schemas.order import OrderDB, OrderInput, OrderUpdate
+from src.security import verify_token # Importa a dependência de segurança
 
 # 1. Criação do Roteador
 router = APIRouter(
@@ -17,9 +18,31 @@ router = APIRouter(
 
 # --- 2. Rota POST: Criar Pedido (Placeholder para contexto) ---
 @router.post("/", response_model=OrderDB, status_code=status.HTTP_201_CREATED)
-async def create_new_order(order: OrderInput):
-    # Lógica de Criação (a ser implementada)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Criação ainda não implementada.")
+async def create_new_order(
+    order: OrderInput, 
+    # NOVO: Adiciona a dependência. Se o token for inválido, o código abaixo NUNCA roda.
+    current_user_id: str = Depends(verify_token) 
+):
+    """
+    Cria um novo pedido no sistema. Requer autenticação JWT válida.
+    O ID do usuário autenticado (current_user_id) está disponível aqui.
+    """
+    
+    # OPCIONAL: Se quisermos garantir que o pedido seja feito pelo usuário logado
+    # if order.customer_id != int(current_user_id):
+    #    raise HTTPException(status_code=403, detail="Acesso negado: ID do cliente não corresponde ao usuário logado.")
+
+    new_order = await create_order(order)
+    
+    if new_order:
+        # Se houver sucesso (201 Created), retorna o objeto OrderDB completo.
+        return new_order
+
+    # Este caso seria capturado pelo exception handler de DuplicateKeyError
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+        detail="Falha ao criar o pedido."
+    )
 
 # --- 3. Rota GET: Listar Todos os Pedidos com Paginação (Mantida) ---
 @router.get("/", response_model=List[OrderDB])
@@ -68,3 +91,12 @@ async def delete_existing_order(orderId: str):
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Pedido com ID '{orderId}' não encontrado para exclusão."
     )
+
+# --- Próxima Rota: PATCH /orders/{orderId} ---
+@router.patch("/{orderId}", response_model=OrderDB)
+async def update_existing_order(
+    orderId: str, 
+    order_data: OrderUpdate
+):
+    # Lógica de Atualização (implementaremos em seguida)
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Atualização PATCH ainda não implementada.")
