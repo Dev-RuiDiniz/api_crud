@@ -1,11 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status, HTTPException
+from fastapi.responses import JSONResponse # Para formatar a resposta de erro
 from starlette.middleware.cors import CORSMiddleware
-# Funções para ciclo de vida do DB
 from .config.db import connect_to_mongo, close_mongo_connection, get_database
-
-# --- Roteadores ---
-# Importa a instância do APIRouter que criamos em src/routers/orders.py
 from .routers.orders import router as orders_router
+from pymongo.errors import DuplicateKeyError
 
 # 1. Instância do FastAPI
 app = FastAPI(
