@@ -57,7 +57,8 @@ app.include_router(orders_router)
 def health_check():
     """Endpoint simples para verificar se a API está online e o status do DB."""
     db = get_database()
-    db_status = "Conectado" if db else "Desconectado"
+    # CORREÇÃO: Compara explicitamente com None
+    db_status = "Conectado" if db is not None else "Desconectado" 
     
     return {
         "message": "API CRUD está online!",

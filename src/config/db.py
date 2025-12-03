@@ -16,7 +16,8 @@ async def configure_indexes():
     """Garante que os índices necessários para otimizar as consultas existam."""
     global database
     
-    if not database:
+    # CORREÇÃO: Compara explicitamente com None
+    if database is None: 
         print("⚠️ Não foi possível configurar índices: DB não está conectado.")
         return
 
