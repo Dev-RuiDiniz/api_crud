@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query, Depends # Importa o Depends
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from typing import List
 from src.crud.orders import (
     get_order_by_id, 
@@ -16,29 +16,20 @@ router = APIRouter(
     tags=["Orders"],
 )
 
-# --- 2. Rota POST: Criar Pedido (Placeholder para contexto) ---
+# --- 2. Rota POST: Criar Pedido (Protegida por JWT) ---
 @router.post("/", response_model=OrderDB, status_code=status.HTTP_201_CREATED)
 async def create_new_order(
     order: OrderInput, 
-    # NOVO: Adiciona a dependência. Se o token for inválido, o código abaixo NUNCA roda.
     current_user_id: str = Depends(verify_token) 
 ):
     """
     Cria um novo pedido no sistema. Requer autenticação JWT válida.
-    O ID do usuário autenticado (current_user_id) está disponível aqui.
     """
-    
-    # OPCIONAL: Se quisermos garantir que o pedido seja feito pelo usuário logado
-    # if order.customer_id != int(current_user_id):
-    #    raise HTTPException(status_code=403, detail="Acesso negado: ID do cliente não corresponde ao usuário logado.")
-
     new_order = await create_order(order)
     
     if new_order:
-        # Se houver sucesso (201 Created), retorna o objeto OrderDB completo.
         return new_order
 
-    # Este caso seria capturado pelo exception handler de DuplicateKeyError
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
         detail="Falha ao criar o pedido."
@@ -67,36 +58,44 @@ async def get_order(orderId: str):
         detail=f"Pedido com ID '{orderId}' não encontrado."
     )
 
-# --- 5. Rota DELETE: Excluir Pedido por ID ---
+# --- 5. Rota DELETE: Excluir Pedido por ID (Mantida) ---
 @router.delete("/{orderId}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_existing_order(orderId: str):
     """
     Exclui um pedido específico pelo seu ID.
-
-    :param orderId: O ID do pedido a ser excluído.
-    :returns: Resposta vazia (204 No Content) em caso de sucesso.
-    :raises HTTPException 404: Se o pedido não for encontrado para exclusão.
     """
-    
-    # 1. Chama a função da camada CRUD
     success = await delete_order(orderId)
     
-    # 2. Verifica o resultado booleano
     if success:
-        # Se True, o pedido foi excluído. Retorna 204.
         return 
     
-    # 3. Se False, o pedido não existia ou houve erro (assumimos 404 para simplicidade)
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Pedido com ID '{orderId}' não encontrado para exclusão."
     )
 
-# --- Próxima Rota: PATCH /orders/{orderId} ---
+# --- 6. Rota PATCH: Atualizar Pedido Parcialmente (Implementada) ---
 @router.patch("/{orderId}", response_model=OrderDB)
 async def update_existing_order(
     orderId: str, 
-    order_data: OrderUpdate
+    order_data: OrderUpdate,
+    current_user_id: str = Depends(verify_token) # PROTETOR: Exige JWT para modificação
 ):
-    # Lógica de Atualização (implementaremos em seguida)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Atualização PATCH ainda não implementada.")
+    """
+    Atualiza parcialmente um pedido existente. Requer autenticação JWT válida.
+    """
+    if not order_data.model_dump(exclude_none=True):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pelo menos um campo deve ser fornecido para a atualização."
+        )
+
+    updated_order = await update_order(orderId, order_data)
+    
+    if updated_order:
+        return updated_order
+    
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Pedido com ID '{orderId}' não encontrado para atualização."
+    )
