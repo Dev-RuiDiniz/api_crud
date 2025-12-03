@@ -4,6 +4,7 @@ from src.config.db import get_database
 from pymongo.results import InsertOneResult, UpdateResult, DeleteResult # Importa DeleteResult
 from bson import ObjectId
 from pymongo import DESCENDING
+from pymongo.errors import DuplicateKeyError
 
 # Nome da coleção no MongoDB
 COLLECTION_NAME = "orders"
@@ -40,6 +41,15 @@ async def create_order(order_data: OrderInput) -> Optional[OrderDB]:
                 new_order_doc["id"] = str(new_order_doc.pop("_id")) 
                 return OrderDB(**new_order_doc)
             
+    except DuplicateKeyError as e: # NOVO: Captura o erro específico
+        print(f"❌ ERRO: Chave duplicada no pedido. Detalhes: {e}")
+        # Neste ponto, você pode levantar uma exceção customizada ou
+        # simplesmente retornar None, mas o tratamento global é mais limpo.
+        # Para o tratamento global funcionar, o erro precisa subir.
+        
+        # Vamos levantar o erro para que o handler global no main.py possa capturá-lo
+        raise e 
+
     except Exception as e:
         print(f"❌ ERRO ao inserir pedido no MongoDB: {e}")
         return None
