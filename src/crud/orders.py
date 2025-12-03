@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from src.schemas.order import OrderDB, OrderInput, OrderUpdate
 from src.config.db import get_database
-from pymongo.results import InsertOneResult, UpdateResult
+from pymongo.results import InsertOneResult, UpdateResult, DeleteResult # Importa DeleteResult
 from bson import ObjectId
 from pymongo import DESCENDING
 
@@ -154,3 +154,35 @@ async def update_order(order_id: str, order_data: OrderUpdate) -> Optional[Order
     except Exception as e:
         print(f"❌ ERRO ao atualizar pedido {order_id}: {e}")
         return None
+    
+# --- 5. FUNÇÃO: DELETE ---
+
+async def delete_order(order_id: str) -> bool:
+    """
+    Exclui um pedido do MongoDB pelo seu ID.
+
+    :param order_id: O ID do pedido a ser excluído.
+    :return: True se o pedido foi excluído com sucesso (matched_count > 0), False caso contrário.
+    """
+    db = get_database()
+    if not db:
+        return False
+
+    try:
+        # 1. Converte a string de ID para o formato ObjectId
+        object_id = ObjectId(order_id)
+        collection = db[COLLECTION_NAME]
+        
+        # 2. Executa a exclusão assíncrona
+        result: DeleteResult = await collection.delete_one(
+            {"_id": object_id}
+        )
+
+        # 3. Verifica o resultado
+        # Se acknowledged for True e deleted_count for 1, a exclusão ocorreu.
+        return result.acknowledged and result.deleted_count > 0
+
+    except Exception as e:
+        # Captura erros de conversão (ObjectId inválido) ou de DB
+        print(f"❌ ERRO ao excluir pedido {order_id}: {e}")
+        return False
