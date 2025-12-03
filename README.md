@@ -15,6 +15,7 @@ O projeto implementa boas práticas de desenvolvimento, como:
 ## ⚙️ Tecnologias Utilizadas
 
 | **Tecnologia** | **Descrição** |
+| :--- | :--- |
 | **Python** | Linguagem de programação principal. |
 | **FastAPI** | Framework moderno e rápido para construção da API assíncrona. |
 | **Pydantic v2** | Validação de dados e definição de schemas. |
@@ -76,6 +77,7 @@ A API estará disponível em:
 O FastAPI fornece documentação interativa para testar a API:
 
 | **Documentação** | **Link** |
+| :--- | :--- |
 | **Swagger UI** | http://127.0.0.1:8000/docs |
 | **ReDoc** | http://127.0.0.1:8000/redoc |
 
@@ -97,7 +99,8 @@ Bearer <SEU_TOKEN_AQUI>
 
 ## 📚 Endpoints Principais (CRUD)
 
-| **Método** | **Endpoint** | **Descrição** | **Status Code** | Protegido (JWT) |
+| **Método** | **Endpoint** | **Descrição** | **Status Code** | **Protegido (JWT)** |
+| :--- | :--- | :--- | :--- | :--- |
 | **POST** | /orders/ | Cria um novo pedido | 201 Created | ✔️ |
 | **GET** | /orders/ | Lista pedidos com paginação (skip, limit) | 200 OK | ❌ |
 | **GET** | /orders/{id} | Busca pedido por ID | 200 OK / 404 |	❌ |
