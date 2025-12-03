@@ -33,7 +33,7 @@ async def shutdown_db_client():
     """Fecha a conexão do MongoDB quando a API é encerrada."""
     await close_mongo_connection()
 
-# --- NOVO: Handler de Exceção Global para MongoDB ---
+# --- Handler de Exceção Global para MongoDB ---
 @app.exception_handler(DuplicateKeyError)
 async def duplicate_key_exception_handler(request: Request, exc: DuplicateKeyError):
     """
@@ -57,7 +57,7 @@ app.include_router(orders_router)
 def health_check():
     """Endpoint simples para verificar se a API está online e o status do DB."""
     db = get_database()
-    # CORREÇÃO: Compara explicitamente com None
+    # Checagem correta para o driver Motor
     db_status = "Conectado" if db is not None else "Desconectado" 
     
     return {
